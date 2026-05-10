@@ -1,41 +1,31 @@
 pipeline {
     agent any
 
-        parameters {
-        booleanParam(
-            name: 'autoApprove',
-            defaultValue: false,
-            description: 'Automatically approve Terraform apply'
-        )
-
+    parameters {
         choice(
             name: 'action',
             choices: ['apply', 'destroy'],
-            description: 'Choose Terraform action'
+            description: 'Terraform action to perform'
         )
-        }
-
-    environment {
-        AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-        AWS_DEFAULT_REGION    = 'us-east-1'
     }
 
     stages {
-        stage('Debug Credentials') {
+
+        stage('Checkout Git Repo') {
             steps {
-                sh 'echo $AWS_ACCESS_KEY_ID'
-            }
-        }
-        stage('Terraform Init') {
-            steps {
-                sh 'terraform init'
+                checkout scmGit(
+                    branches: [[name: '*/main']],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/ashish-repository/terraform-pipeline.git'
+                    ]]
+                )
             }
         }
 
-        stage('Terraform Format Check') {
+        stage('Terraform Init') {
             steps {
-                sh 'terraform fmt -check'
+                sh 'terraform init'
             }
         }
 
@@ -47,46 +37,21 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                sh 'terraform plan -out=tfplan'
-                sh 'terraform show -no-color tfplan > tfplan.txt'
+                sh 'terraform plan'
             }
         }
 
-        stage('Approval') {
-            when {
-                expression {
-                    return params.action == 'apply' && !params.autoApprove
-                }
-            }
-
+        stage('Terraform Action') {
             steps {
                 script {
-                    def plan = readFile('tfplan.txt')
+                    echo "Terraform action is --> ${params.action}"
 
-                    input(
-                        message: 'Approve Terraform Apply?',
-                        parameters: [
-
-                            text(
-                                name: 'Terraform Plan',
-                                defaultValue: plan,
-                                description: 'Review Terraform Plan'
-                            )
-                        ]
-                    )
-                }
-            }
-        }
-
-        stage('Terraform Apply / Destroy') {
-            steps {
-                script {
                     if (params.action == 'apply') {
-                        sh 'terraform apply -input=false tfplan'
+                        sh 'terraform apply -auto-approve'
                     } else if (params.action == 'destroy') {
                         sh 'terraform destroy -auto-approve'
                     } else {
-                        error 'Invalid action selected'
+                        error "Invalid action selected"
                     }
                 }
             }
@@ -95,19 +60,11 @@ pipeline {
 
     post {
         success {
-            echo 'Terraform deployment completed successfully!'
+            echo "Pipeline executed successfully"
         }
 
         failure {
-            echo 'Terraform deployment failed!'
-        }
-
-        always {
-            script {
-                if (fileExists('tfplan.txt')) {
-                    archiveArtifacts artifacts: 'tfplan.txt', onlyIfSuccessful: false
-                }
-            }
+            echo "Pipeline failed"
         }
     }
 }
