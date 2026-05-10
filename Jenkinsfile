@@ -10,7 +10,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout Git Repo') {
             steps {
                 checkout scmGit(
@@ -25,7 +24,7 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                sh 'terraform init -upgrade'
             }
         }
 
@@ -51,7 +50,7 @@ pipeline {
                     } else if (params.action == 'destroy') {
                         sh 'terraform destroy -auto-approve'
                     } else {
-                        error "Invalid action selected"
+                        error 'Invalid action selected'
                     }
                 }
             }
@@ -60,11 +59,11 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline executed successfully"
+            echo 'Pipeline executed successfully'
         }
 
         failure {
-            echo "Pipeline failed"
+            echo 'Pipeline failed'
         }
     }
 }
