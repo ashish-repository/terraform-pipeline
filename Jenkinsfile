@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    stage('Debug Credentials') {
+    steps {
+        sh 'echo $AWS_ACCESS_KEY_ID'
+    }
+}
     parameters {
         booleanParam(
             name: 'autoApprove',
