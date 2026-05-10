@@ -1,12 +1,7 @@
 pipeline {
     agent any
 
-    stage('Debug Credentials') {
-    steps {
-        sh 'echo $AWS_ACCESS_KEY_ID'
-    }
-}
-    parameters {
+        parameters {
         booleanParam(
             name: 'autoApprove',
             defaultValue: false,
@@ -18,7 +13,7 @@ pipeline {
             choices: ['apply', 'destroy'],
             description: 'Choose Terraform action'
         )
-    }
+        }
 
     environment {
         AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
@@ -27,6 +22,11 @@ pipeline {
     }
 
     stages {
+        stage('Debug Credentials') {
+            steps {
+                sh 'echo $AWS_ACCESS_KEY_ID'
+            }
+        }
         stage('Terraform Init') {
             steps {
                 sh 'terraform init'
