@@ -1,7 +1,7 @@
 ﻿# terraform-pipeline
 
 Manage Jenkins → Credentials → System → Global credentials → Add Credentials
-`
+```
 🔑 CREATE ACCESS KEY (IMPORTANT)
 Field	Value
 Kind	Secret text
@@ -13,4 +13,4 @@ Field	Value
 Kind	Secret text
 Secret	YOUR_SECRET_KEY
 ID	aws-secret-access-key
-`
+```
