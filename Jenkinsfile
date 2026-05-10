@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     parameters {
-
         booleanParam(
             name: 'autoApprove',
             defaultValue: false,
@@ -23,16 +22,6 @@ pipeline {
     }
 
     stages {
-
-        stage('Checkout') {
-            steps {
-
-                git branch: 'main',
-                url: 'https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO.git'
-
-            }
-        }
-
         stage('Terraform Init') {
             steps {
                 sh 'terraform init'
@@ -59,7 +48,6 @@ pipeline {
         }
 
         stage('Approval') {
-
             when {
                 expression {
                     return params.action == 'apply' && !params.autoApprove
@@ -67,9 +55,7 @@ pipeline {
             }
 
             steps {
-
                 script {
-
                     def plan = readFile('tfplan.txt')
 
                     input(
@@ -88,23 +74,14 @@ pipeline {
         }
 
         stage('Terraform Apply / Destroy') {
-
             steps {
-
                 script {
-
                     if (params.action == 'apply') {
-
                         sh 'terraform apply -input=false tfplan'
-
                     } else if (params.action == 'destroy') {
-
                         sh 'terraform destroy -auto-approve'
-
                     } else {
-
-                        error "Invalid action selected"
-
+                        error 'Invalid action selected'
                     }
                 }
             }
@@ -112,7 +89,6 @@ pipeline {
     }
 
     post {
-
         success {
             echo 'Terraform deployment completed successfully!'
         }
@@ -122,7 +98,11 @@ pipeline {
         }
 
         always {
-            archiveArtifacts artifacts: 'tfplan.txt', onlyIfSuccessful: false
+            script {
+                if (fileExists('tfplan.txt')) {
+                    archiveArtifacts artifacts: 'tfplan.txt', onlyIfSuccessful: false
+                }
+            }
         }
     }
 }
