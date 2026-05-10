@@ -1,17 +1,17 @@
 variable "aws_region" {
-  description = "AWS Region"
+  description = "AWS region"
   type        = string
-  default     = "us-east-1"
+  default     = "ap-south-1"
 }
 
 variable "instance_type" {
-  description = "EC2 Instance Type"
+  description = "EC2 instance type"
   type        = string
   default     = "t3.micro"
 }
 
 variable "name_tag" {
-  description = "Name tag for EC2 instance"
+  description = "Instance name"
   type        = string
-  default     = "My EC2 Instance"
+  default     = "Jenkins-TF-Instance"
 }

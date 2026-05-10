@@ -5,20 +5,20 @@ pipeline {
         choice(
             name: 'action',
             choices: ['apply', 'destroy'],
-            description: 'Terraform action to perform'
+            description: 'Terraform action'
         )
     }
 
+    environment {
+        AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+        AWS_DEFAULT_REGION    = 'ap-south-1'
+    }
+
     stages {
-        stage('Checkout Git Repo') {
+        stage('Checkout') {
             steps {
-                checkout scmGit(
-                    branches: [[name: '*/main']],
-                    extensions: [],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/ashish-repository/terraform-pipeline.git'
-                    ]]
-                )
+                checkout scm
             }
         }
 
@@ -40,17 +40,17 @@ pipeline {
             }
         }
 
-        stage('Terraform Action') {
+        stage('Terraform Apply / Destroy') {
             steps {
                 script {
-                    echo "Terraform action is --> ${params.action}"
+                    echo "Selected action: ${params.action}"
 
                     if (params.action == 'apply') {
                         sh 'terraform apply -auto-approve'
-                    } else if (params.action == 'destroy') {
+                    }
+
+                    if (params.action == 'destroy') {
                         sh 'terraform destroy -auto-approve'
-                    } else {
-                        error 'Invalid action selected'
                     }
                 }
             }
@@ -59,11 +59,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline executed successfully'
+            echo 'Pipeline SUCCESS'
         }
-
         failure {
-            echo 'Pipeline failed'
+            echo 'Pipeline FAILED'
         }
     }
 }
